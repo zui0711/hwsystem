@@ -97,11 +97,11 @@ class SetParamUi(QtGui.QDialog, Ui_paramWindow):
         self.saveButton.clicked.connect(self.save_param)
         self.param_path = pjoin(path, "params.py")
 
-        self.plainTextEdit.setPlainText(open("params.py").read())
+        self.plainTextEdit.setPlainText(open("default_params.py").read())
 
     def save_param(self):
         s = self.plainTextEdit.toPlainText()
-        open("params.py", mode='w').write(s)
+        open("default_params.py", mode='w').write(s)
         open(self.param_path, mode='w').write(s)
 
 
