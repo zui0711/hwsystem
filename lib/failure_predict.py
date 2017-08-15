@@ -16,7 +16,7 @@ from lib import data_utils
 
 
 
-def train():
+def seqseq_train():
     print("Preparing dialog data in %s" % FLAGS.data_dir)
     train_data, dev_data, _ = data_utils.prepare_dialog_data(FLAGS.data_dir, FLAGS.vocab_size)
 
@@ -106,7 +106,7 @@ def train():
                 step_time, loss = 0.0, 0.0
 
 
-def predict(steps):
+def seq2seq_predict(steps):
     def _get_test_dataset(encoder_size):
         with open(TEST_DATASET_PATH) as test_fh:
             test_sentences = []
@@ -185,3 +185,72 @@ def predict(steps):
             record_file.write("%d\t%.5f\t%.5f\n" % (predict_step, WER, BLEU))
 
         record_file.close()
+
+
+
+def lstm_train(X_train, y_train, X_test, y_test):
+    print(SAVE_DATA_DIR)
+
+    print('Pad sequences (samples x time)')
+    X_train = sequence.pad_sequences(X_train, maxlen=LSTM_max_len)
+    X_test = sequence.pad_sequences(X_test, maxlen=LSTM_max_len)
+    print('X_train shape:', X_train.shape)
+    print('X_test shape:', X_test.shape)
+
+    print('\nBuild model...')
+    # model = create_model_lstm(embedding_trainable=True)#, embedding_matrix=load_emb_mat())
+    model = create_model_lstm()
+
+    print('\nTrain...')
+    # print model.get_weights()[1][0]
+
+    for i in xrange(5):
+        print("\ni = %d"%i)
+
+        # for _ in xrange(5):
+        #     print np.random.choice([1, 2, 4, 5, 6, 7, 8, 9])
+        model.fit(X_train, y_train, nb_epoch=10, verbose=1, batch_size=LSTM_batch_size, validation_data=[X_test, y_test])
+        model.save_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(i*10+10)))
+
+
+def lstm_predict(X_test, y_test, mode_name, record_file, analysis_mode=False):
+    X_test = sequence.pad_sequences(X_test, maxlen=LSTM_max_len)
+    print('X_test shape:', X_test.shape)
+
+    model = create_model_lstm()
+    model.load_weights(pjoin(SAVE_DATA_DIR, mode_name+".h5"))
+
+    if not analysis_mode:
+        score, acc = model.evaluate(X_test, y_test,
+                                    batch_size=LSTM_batch_size)
+        print('Test loss: %0.5f' % score)
+        print('Test accuracy: %0.5f\n' % acc)
+
+        record_file.write("%.5f\t%.5f\n" % (score, acc))
+
+    else:
+        predict_y = model.predict(X_test)
+
+        ans = {}
+        for predict, test in zip(predict_y, y_test):
+            # if float(predict) <= 0.28 or float(predict) > 0.5 and float(predict) <= 0.6:
+            if float(predict) < 0.5:
+                p_t = (0, int(test))
+            else:
+                p_t = (1, int(test))
+            if p_t in ans:
+                ans[p_t] += 1
+            else:
+                ans[p_t] = 1
+        print ans
+
+        # ans = [{}, {}, {}, {}, {}]
+        # for predict, test in zip(predict_y, y_test):
+        #     for i in xrange(len(ans)):
+        #         p_t = (int(predict + 0.5 + 0.1 * i), int(test))
+        #         if p_t in ans[i]:
+        #             ans[i][p_t] += 1
+        #         else:
+        #             ans[i][p_t] = 1
+        # for i in xrange(len(ans)):
+        #     print "predict, test", ans[i]
