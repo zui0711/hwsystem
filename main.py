@@ -25,19 +25,16 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
-        # self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.trainButton.clicked.connect(self.print_t)
-        self.runButton.clicked.connect(self.print_r)
+        self.trainButton.clicked.connect(self._train)
+        self.runButton.clicked.connect(self._run)
         PATH.set_path("")
 
-    def print_t(self):
+    def _train(self):
         print("Train...")
         self.train = train()
         self.train.show()
-        # self.train.exec_()
-        # self.path = self.train.get_path()
 
-    def print_r(self):
+    def _run(self):
         print("Run...")
         self.run = run()
         self.run.show()
@@ -53,7 +50,6 @@ class train(QtGui.QMainWindow, Ui_trainWindow):
         self.preproButton.clicked.connect(self._prepro)
         self.detectButton.clicked.connect(self._detect)
         self.predictButton.clicked.connect(self._predict)
-        # self.path = path
 
     def _load_data(self):
         print("Load...")
@@ -87,7 +83,7 @@ class SetParamUi(QtGui.QDialog, Ui_paramWindow):
         Ui_paramWindow.__init__(self)
         self.setupUi(self)
         self.saveButton.clicked.connect(self.save_param)
-        self.param_path = pjoin(PATH.get_path(), "params.py")
+        self.param_path = pjoin(PATH.get_path(), "setting_params.py")
 
         self.plainTextEdit.setPlainText(open("config/setting_params.py").read())
 

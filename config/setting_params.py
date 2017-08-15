@@ -22,10 +22,7 @@ vocab_size = 161
 LSTM_embedding_size = 200
 LSTM_batch_size = 128
 
-prepare_data_source_path = "/media/workserv/498ee660-1fc8-40e8-bb02-f0a626cbfe93/jwl/PycharmProjects/FailureAnalysis/data/network_diagnosis_data"
-prepare_data_source_file = "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1"
-prepare_data_label = "Paging"
-prepare_data_save_path = "/media/zui/work/NETWORK/ALL_DATA/FailurePredict"
+
 
 learning_rate = 0.5
 learning_rate_decay_factor = 0.99
