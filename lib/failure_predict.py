@@ -6,19 +6,28 @@ import time
 import numpy as np
 
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append("../")
 
 import tensorflow as tf
 
+from tensorflow.python.platform import gfile
+
 from models.seq2seq import create_model
-from configs.data_config import FLAGS, BUCKETS, pjoin
-from lib.data_utils import read_data
-from lib import data_utils
+from models.LSTM import create_model_lstm
+from config.all_params import *
+from data_utils import *
 
+from keras.preprocessing import sequence
+import keras.backend as K
 
+import cPickle
 
-def seqseq_train():
+def seq2seq_train():
+    if not gfile.Exists(pjoin(SAVE_DATA_DIR, "nn_models")):
+        gfile.MakeDirs(pjoin(SAVE_DATA_DIR, "nn_models"))
+        gfile.MakeDirs(pjoin(SAVE_DATA_DIR, "results"))
     print("Preparing dialog data in %s" % FLAGS.data_dir)
-    train_data, dev_data, _ = data_utils.prepare_dialog_data(FLAGS.data_dir, FLAGS.vocab_size)
+    train_data, dev_data, _ = prepare_dialog_data(FLAGS.data_dir, FLAGS.vocab_size)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -49,7 +58,8 @@ def seqseq_train():
         previous_losses = []
 
         print("start train...")
-        while (True):
+        # while (True):
+        while(model.global_step.eval() <= seq2seq_epoch):
             # Choose a bucket according to data distribution. We pick a random number
             # in [0, 1] and use the corresponding interval in train_buckets_scale.
             random_number_01 = np.random.random_sample()
@@ -85,7 +95,7 @@ def seqseq_train():
 
                 # Run evals on development set and print their perplexity.
                 for bucket_id in xrange(len(BUCKETS)):
-                    print("Testing...")
+                    print("\nTesting...")
 
                     encoder_inputs, decoder_inputs, target_weights = model.get_batch(dev_set, bucket_id, "train")
                     _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, True)
@@ -106,7 +116,7 @@ def seqseq_train():
                 step_time, loss = 0.0, 0.0
 
 
-def seq2seq_predict(steps):
+def seq2seq_predict():
     def _get_test_dataset(encoder_size):
         with open(TEST_DATASET_PATH) as test_fh:
             test_sentences = []
@@ -134,10 +144,10 @@ def seq2seq_predict(steps):
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
         model = create_model(sess, forward_only=True)
-        record_file_name = "seq2seq_score"
-        record_file = open(pjoin(FLAGS.results_dir, record_file_name), mode="ab", buffering=0)
+        # record_file_name = "seq2seq_score"
+        # record_file = open(pjoin(FLAGS.results_dir, record_file_name), mode="ab", buffering=0)
 
-        for predict_step in steps:
+        for predict_step in [seq2seq_epoch]:
             predict_path = pjoin(FLAGS.model_dir, "model.ckpt-%d" % predict_step)
             print("Reading model parameters from %s" % predict_path)
             model.saver.restore(sess, predict_path)
@@ -174,51 +184,54 @@ def seq2seq_predict(steps):
 
                         results_f.write(output_sentence + '\n')
                         results_f_ids.write(output_sentence_ids + "\n")
-                    # print("batch %d finish..."%num)
+                    print("batch %d finish..."%num)
                 t = time.time() - start_time
                 print("predict: total time = %0.2f, per time = %0.2f" % (t, t / float(batch_num - 1)))
 
             # print("Predict finish...")
 
             # print file_r, results_path
-            WER, BLEU = get_score(file_r, results_path)
-            record_file.write("%d\t%.5f\t%.5f\n" % (predict_step, WER, BLEU))
+            # WER, BLEU = get_score(file_r, results_path)
+            # record_file.write("%d\t%.5f\t%.5f\n" % (predict_step, WER, BLEU))
 
-        record_file.close()
+        # record_file.close()
 
 
 
-def lstm_train(X_train, y_train, X_test, y_test):
+def lstm_train():
+    K.clear_session()
     print(SAVE_DATA_DIR)
 
     print('Pad sequences (samples x time)')
+    X_train, y_train = load_data_lstm("train")
+
     X_train = sequence.pad_sequences(X_train, maxlen=LSTM_max_len)
-    X_test = sequence.pad_sequences(X_test, maxlen=LSTM_max_len)
+    # X_test = sequence.pad_sequences(X_test, maxlen=LSTM_max_len)
     print('X_train shape:', X_train.shape)
-    print('X_test shape:', X_test.shape)
+    # print('X_test shape:', X_test.shape)
 
     print('\nBuild model...')
-    # model = create_model_lstm(embedding_trainable=True)#, embedding_matrix=load_emb_mat())
     model = create_model_lstm()
 
     print('\nTrain...')
-    # print model.get_weights()[1][0]
 
-    for i in xrange(5):
-        print("\ni = %d"%i)
+    print("\n")
 
-        # for _ in xrange(5):
-        #     print np.random.choice([1, 2, 4, 5, 6, 7, 8, 9])
-        model.fit(X_train, y_train, nb_epoch=10, verbose=1, batch_size=LSTM_batch_size, validation_data=[X_test, y_test])
-        model.save_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(i*10+10)))
+    model.fit(X_train, y_train, nb_epoch=lstm_epoch, verbose=1, batch_size=LSTM_batch_size)
+    print "train finish..."
+    model.save_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(lstm_epoch)))
+    # cPickle.dump(model, open("lstm_model_%d.h5"%(lstm_epoch)))
 
 
-def lstm_predict(X_test, y_test, mode_name, record_file, analysis_mode=False):
+def lstm_predict(analysis_mode=False):
+    K.clear_session()
+    X_test, y_test = load_data_lstm("run")
+
     X_test = sequence.pad_sequences(X_test, maxlen=LSTM_max_len)
     print('X_test shape:', X_test.shape)
 
     model = create_model_lstm()
-    model.load_weights(pjoin(SAVE_DATA_DIR, mode_name+".h5"))
+    model.load_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(lstm_epoch)))
 
     if not analysis_mode:
         score, acc = model.evaluate(X_test, y_test,
@@ -226,14 +239,13 @@ def lstm_predict(X_test, y_test, mode_name, record_file, analysis_mode=False):
         print('Test loss: %0.5f' % score)
         print('Test accuracy: %0.5f\n' % acc)
 
-        record_file.write("%.5f\t%.5f\n" % (score, acc))
+        # record_file.write("%.5f\t%.5f\n" % (score, acc))
 
     else:
         predict_y = model.predict(X_test)
 
         ans = {}
         for predict, test in zip(predict_y, y_test):
-            # if float(predict) <= 0.28 or float(predict) > 0.5 and float(predict) <= 0.6:
             if float(predict) < 0.5:
                 p_t = (0, int(test))
             else:
@@ -244,13 +256,3 @@ def lstm_predict(X_test, y_test, mode_name, record_file, analysis_mode=False):
                 ans[p_t] = 1
         print ans
 
-        # ans = [{}, {}, {}, {}, {}]
-        # for predict, test in zip(predict_y, y_test):
-        #     for i in xrange(len(ans)):
-        #         p_t = (int(predict + 0.5 + 0.1 * i), int(test))
-        #         if p_t in ans[i]:
-        #             ans[i][p_t] += 1
-        #         else:
-        #             ans[i][p_t] = 1
-        # for i in xrange(len(ans)):
-        #     print "predict, test", ans[i]

@@ -5,6 +5,7 @@ from PyQt4 import QtGui, QtCore, uic
 from interact import BackWorkThread
 
 from os.path import join as pjoin
+import os
 import config.path as PATH
 
 qtCreatorFile_main = "uis/main.ui"
@@ -27,7 +28,6 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.trainButton.clicked.connect(self._train)
         self.runButton.clicked.connect(self._run)
-        PATH.set_path("")
 
     def _train(self):
         print("Train...")
@@ -82,15 +82,20 @@ class SetParamUi(QtGui.QDialog, Ui_paramWindow):
         QtGui.QDialog.__init__(self)
         Ui_paramWindow.__init__(self)
         self.setupUi(self)
-        self.saveButton.clicked.connect(self.save_param)
+        self.saveButton.clicked.connect(self._save_param)
         self.param_path = pjoin(PATH.get_path(), "setting_params.py")
 
         self.plainTextEdit.setPlainText(open("config/setting_params.py").read())
 
-    def save_param(self):
+    def _save_param(self):
         s = self.plainTextEdit.toPlainText()
         open("config/setting_params.py", mode='w').write(s)
         open(self.param_path, mode='w').write(s)
+        QtGui.QMessageBox.information(self, "Warning",
+                                      u"程序即将重启以载入新参数")
+        python = sys.executable
+        os.execl(python, python, * sys.argv)
+
 
 
 class run(QtGui.QMainWindow, Ui_runWindow):
@@ -129,9 +134,11 @@ class outputWindow(QtGui.QDialog, Ui_Window):
         Ui_Window.__init__(self)
         self.setupUi(self)
         self.setWindowTitle(title)
+        self.rFLAG = False
         sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
 
         self.bwThread = BackWorkThread(mode)
+
         self.bwThread.start()
 
     def __del__(self):
@@ -139,16 +146,35 @@ class outputWindow(QtGui.QDialog, Ui_Window):
 
     def normalOutputWritten(self, text):
         cursor = self.textBrowser.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertText(text)
-        self.textBrowser.setTextCursor(cursor)
-        self.textBrowser.ensureCursorVisible()
+        if text == "\r":
+            self.rFLAG = True
+            pass
+        elif "\b" in text:
+            pass
+
+        else:
+
+            if self.rFLAG:
+                cursor.movePosition(QtGui.QTextCursor.StartOfLine)
+                cursor.select(QtGui.QTextCursor.LineUnderCursor)
+                cursor.removeSelectedText()
+                # cursor.insertText("\n")
+                self.rFLAG = False
+            else:
+                cursor.movePosition(QtGui.QTextCursor.End)
+            cursor.insertText(text)
+            self.textBrowser.setTextCursor(cursor)
+            self.textBrowser.ensureCursorVisible()
 
 
 class EmittingStream(QtCore.QObject):
     textWritten = QtCore.pyqtSignal(str)
     def write(self, text):
-        self.textWritten.emit(str(text))
+        self.textWritten.emit(text)
+
+    def flush(self):
+        pass
+        # self.textWritten.emit(str("\r"))
 
 
 if __name__ == "__main__":

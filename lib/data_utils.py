@@ -3,10 +3,14 @@
 import os
 import re
 import sys
+
+import numpy as np
+np.random.seed(1337)
+
 import random
 
 from os.path import join as pjoin
-from configs.data_config import *
+from config.all_params import *
 
 from tensorflow.python.platform import gfile
 
@@ -240,7 +244,7 @@ def read_data(tokenized_dialog_path, max_size=None):
             counter += 1
             if counter % 100000 == 0:
                 print("  reading data line %d" % counter)
-                sys.stdout.flush()
+                # sys.stdout.flush()
 
             source_ids = [int(x) for x in source.split()]
             target_ids = [int(x) for x in target.split()]
@@ -254,7 +258,7 @@ def read_data(tokenized_dialog_path, max_size=None):
     return data_set
 
 
-def prepare_encode_decode_data(source_path, source_name, save_path, label,
+def prepare_encode_decode_data(source_path, source_name, save_path,
                                encode_decode_window, encode_decode_gap, encode_decode_step,
                                if_sample=False, sample_number=0):
     """
@@ -273,11 +277,10 @@ def prepare_encode_decode_data(source_path, source_name, save_path, label,
     Returns:
 
     """
-    save_path = pjoin(save_path, label)
     # 先判断是否已经将原始样本切分为normal/error/recovery三部分
     if not gfile.Exists(pjoin(save_path, "error")):
         print("cut data to normal/error/recovery...")
-        cut_data(source_path, source_name, save_path)
+        cut_data(save_path)
 
     print("get <encode, decode, label> data...")
 
@@ -373,7 +376,7 @@ def prepare_encode_decode_data(source_path, source_name, save_path, label,
                     wf.write(state + "\n")
 
 
-def cut_data(source_path, source_name, save_path):
+def cut_data(save_path):
     """将原始样本切分为normal/error/recovery三部分"""
 
     for name in ["error", "normal", "recovery"]:
@@ -387,7 +390,8 @@ def cut_data(source_path, source_name, save_path):
     cut_end = [-1]  # 恢复结束
 
     # 判断每句是否有错误
-    with gfile.GFile(pjoin(source_path, source_name, "clean.txt"), mode="rb") as f:
+    # with gfile.GFile(pjoin(source_path, source_name, "clean.txt"), mode="rb") as f:
+    with gfile.GFile(RAW_PAGING_DATA, mode="rb") as f:
         contxt = f.readlines()
         print(len(contxt))
         flags = [0 for i in range(len(contxt))] # 0:normal. 1:error, -1:recovery
@@ -431,8 +435,8 @@ def cut_data(source_path, source_name, save_path):
                 f.write(line)
 
 
-def set_train_test(path, label, encode_decode_window, encode_decode_gap, encode_decode_step):
-    path = pjoin(path, label, "_".join([str(encode_decode_window), str(encode_decode_gap), str(encode_decode_step)]))
+def set_train_test(path, encode_decode_window, encode_decode_gap, encode_decode_step):
+    path = pjoin(path, "_".join([str(encode_decode_window), str(encode_decode_gap), str(encode_decode_step)]))
     # with gfile.GFile(pjoin(path, "encode.txt"), mode="rb") as f_en, \
     #         gfile.GFile(pjoin(path, "encode.txt"), mode="rb") as f_de, \
     #         gfile.GFile(pjoin(path, "labels.txt"), mode="rb") as f_l:
@@ -471,3 +475,84 @@ def set_train_test(path, label, encode_decode_window, encode_decode_gap, encode_
 
 # def sampled_
 
+
+def load_data_lstm(mode):
+    name = "decode.ids%d.txt"%seq2seq_vocab_size
+    print name
+
+    if mode == "train":
+        X_train = []
+        y_train = []
+
+        with open(pjoin(SAVE_DATA_DIR, "train", name), "rb") as f,\
+                open(pjoin(SAVE_DATA_DIR, "train", "labels.txt"), "rb") as fl:
+            con = f.readlines()
+            conl = fl.readlines()
+            f.close()
+            fl.close()
+
+            nor = []
+            err = []
+
+            for i, line in enumerate(con):
+                if conl[i].strip() == "Normal":
+                    nor.append(line)
+                else:
+                    err.append(line)
+
+            print("train: all - > %d, nor -> %d, err -> %d"%(len(con), len(nor), len(err)))
+            for n in nor[:len(err)]:
+                X_train.append([int(nn)-2 for nn in n.strip().split()])
+                y_train.append(0)
+            for e in err:
+                X_train.append([int(ee)-2 for ee in e.strip().split()])
+                y_train.append(1)
+
+            t = zip(X_train, y_train)
+            np.random.shuffle(t)
+            for i, elem in enumerate(t):
+                X_train[i], y_train[i] = elem
+        return_x = X_train
+        return_y = y_train
+
+
+    else:
+        X_test = []
+        y_test = []
+
+        name = "results(%d, %d).ids%d.%d" % (LSTM_max_len, LSTM_max_len, seq2seq_vocab_size, seq2seq_epoch)
+
+        print pjoin(SAVE_DATA_DIR, "results", name)
+        with open(pjoin(SAVE_DATA_DIR, "results", name), "rb") as f, \
+                open(pjoin(SAVE_DATA_DIR, "test", "labels.txt"), "rb") as fl:
+            con = f.readlines()
+            conl = fl.readlines()
+            f.close()
+            fl.close()
+
+            nor = []
+            err = []
+
+            for i, line in enumerate(con):
+                if conl[i].strip() == "Normal":
+                    nor.append(line)
+                else:
+                    err.append(line)
+            print("test: all - > %d, nor -> %d, err -> %d"%(len(con), len(nor), len(err)))
+
+            for n in nor[:len(err)]:
+                X_test.append([int(nn)-2 for nn in n.strip().split()])
+                y_test.append(0)
+            for e in err:
+                X_test.append([int(ee)-2 for ee in e.strip().split()])
+                y_test.append(1)
+
+            t = zip(X_test, y_test)
+            np.random.shuffle(t)
+            for i, elem in enumerate(t):
+                X_test[i], y_test[i] = elem
+
+        return_x = X_test
+        return_y = y_test
+
+    return return_x, return_y
