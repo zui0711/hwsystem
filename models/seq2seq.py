@@ -8,7 +8,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
-from tensorflow.models.rnn.translate import data_utils
+# from tensorflow.models.rnn.translate import data_utils
+import lib.data_utils
 from config.all_params import *
 
 

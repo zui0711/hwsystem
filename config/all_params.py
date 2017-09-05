@@ -3,14 +3,16 @@ import path as PATH
 from os.path import join as pjoin
 import os
 import tensorflow as tf
+
 # preprocess
-# PATH.set_path("/media/workserv/498ee660-1fc8-40e8-bb02-f0a626cbfe93/jwl/PycharmProjects/FailureAnalysis/data/network_diagnosis_data")
 
 seq2seq_vocab_size = vocab_size + 3
 prepare_data_source_path = PATH.get_path()
 
-prepare_data_source_file = "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1"
+# prepare_data_source_file = "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1"
 # prepare_data_label = "Paging"
+
+RAW_PAGING_DATA = pjoin(PATH.get_path(), "detect-new/clean/BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1-clean.txt")
 
 prepare_data_save_path = pjoin(PATH.get_path(), "PREDICT")
 
@@ -19,11 +21,27 @@ prepare_data_save_path = pjoin(PATH.get_path(), "PREDICT")
 SAVE_DATA_DIR = pjoin(prepare_data_save_path, "_".join([str(encode_decode_window), str(encode_decode_gap), str(encode_decode_step)]))
 TEST_DATASET_PATH = pjoin(SAVE_DATA_DIR, "test", ".".join(["encode", "ids"+str(seq2seq_vocab_size), "txt"]))
 
-RAW_PAGING_DATA = pjoin(PATH.get_path(), "detect-new/clean/BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1-clean.txt")
 
 # failure detect
 #----------------------------------------------------------------------------------------------#
 ## failure detect
+
+#error info
+File_label = ['UeAbnormal', 'NORMAL', 'Paging', 'GTPC'] #label info
+File_name = [
+    'BaseLine-BigData_1kUE_20ENB_UeAbnormal-Case_Group_1-Case_1_new_With_Tag.log',
+    "BaseLine-BigData_1kUE_20ENB_NORMAL-Case_Group_1-Case_1.log",
+    "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1.log",
+    "BaseLine-BigData_1kUE_20ENB_gtpcbreakdown-Case_Group_1-Case_1.log",
+    ]   #Which files are supposed to be preocessed (infact,this one is unused)
+#B
+File_name0 = [
+    'BaseLine-BigData_1kUE_20ENB_UeAbnormal-Case_Group_1-Case_1_new_With_Tag',
+    "BaseLine-BigData_1kUE_20ENB_NORMAL-Case_Group_1-Case_1",
+    "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1",
+    "BaseLine-BigData_1kUE_20ENB_gtpcbreakdown-Case_Group_1-Case_1"
+    ] #Which files are supposed to be preocessed
+
 
 #path
 MY_ROOT_PATH = PATH.get_path()

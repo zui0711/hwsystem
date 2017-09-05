@@ -134,7 +134,7 @@ def cnn_w2v_adptive_train():
     # callbacks_list = [checkpoint] # checkpoint
     # print(VALIDATION_SPLIT,epoch_num,batch_size)
     model.fit(x_train, y_train,  validation_split=VALIDATION_SPLIT,
-              nb_epoch=epoch_num, batch_size=batch_size, verbose=0)#shuffle=True  callbacks=None
+              nb_epoch=epoch_num, batch_size=batch_size, verbose=1)#shuffle=True  callbacks=None
     print('Saving model　at %s.'%filepath)
     json_string = model.to_json()  #equals json_string = model.get_config()
     with open(t_path +'.json','w+') as ft:

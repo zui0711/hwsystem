@@ -258,14 +258,13 @@ def read_data(tokenized_dialog_path, max_size=None):
     return data_set
 
 
-def prepare_encode_decode_data(source_path, source_name, save_path,
+def prepare_encode_decode_data(source_path, save_path,
                                encode_decode_window, encode_decode_gap, encode_decode_step,
                                if_sample=False, sample_number=0):
     """
     为预测模型准备<编码, 解码, 标签>样本
     Args:
         source_path: 原始文件输入路径
-        source_name: 原始文件名
         save_path: 保存文件路径
         label: 错误/正常类型
         encode_decode_window: 编解码对窗口大小

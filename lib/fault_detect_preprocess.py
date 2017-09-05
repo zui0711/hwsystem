@@ -174,8 +174,8 @@ def detect_prepro():
     path_init()
     
     #remove symbos
-    for i in range(len(File_name0)):
-        my_de_symbols(File_name0[i],File_label[i])
+    # for i in range(len(File_name0)):
+    #     my_de_symbols(File_name0[i],File_label[i])
 
     #train word2vectors
     if  IF_TRAIN_W2V :

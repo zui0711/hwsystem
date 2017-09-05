@@ -52,27 +52,26 @@ class train(QtGui.QMainWindow, Ui_trainWindow):
         self.predictButton.clicked.connect(self._predict)
 
     def _load_data(self):
-        print("Load...")
-        print self.lineEdit.text().toUtf8()
+        print("GET RAW DATA PATH: " + self.lineEdit.text().toUtf8())
         PATH.set_path(str(self.lineEdit.text().toUtf8()))
 
     def _set_param(self):
-        print("set params...")
+        print("SET PARAMETERS")
         set_param = SetParamUi()
         set_param.exec_()
 
     def _prepro(self):
-        print("prepro...")
+        print("START PREPROCESSING")
         ow = outputWindow("train_prepro", u"预处理")
         ow.exec_()
 
     def _detect(self):
-        print("Detect...")
+        print("START TRAINING DETECTION MODEL")
         ow = outputWindow("train_detect", u"故障诊断")
         ow.exec_()
 
     def _predict(self):
-        print('Predict...')
+        print('START TRAINING PREDICTION MODEL')
         ow = outputWindow("train_predict", u"故障预测")
         ow.exec_()
 
@@ -109,12 +108,11 @@ class run(QtGui.QMainWindow, Ui_runWindow):
         self.predictButton.clicked.connect(self._predict)
 
     def _load_data(self):
-        print("Load...")
-        print self.lineEdit.text().toUtf8()
+        print("GET RAW DATA PATH " + self.lineEdit.text().toUtf8())
         PATH.set_path(str(self.lineEdit.text().toUtf8()))
 
     def _detect(self):
-        print("Detect...")
+        print("START FAILURE DETECTION")
         if self.checkBox.isChecked():
             ow = outputWindow("run_detect_2", u"故障检测")
         else:
@@ -123,7 +121,7 @@ class run(QtGui.QMainWindow, Ui_runWindow):
         # detect.exec_()
 
     def _predict(self):
-        print('Predict...')
+        print('START FAILURE PREDITION')
         ow = outputWindow("run_predict", u"故障预测")
         ow.exec_()
 
@@ -138,7 +136,6 @@ class outputWindow(QtGui.QDialog, Ui_Window):
         sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
 
         self.bwThread = BackWorkThread(mode)
-
         self.bwThread.start()
 
     def __del__(self):
@@ -148,17 +145,15 @@ class outputWindow(QtGui.QDialog, Ui_Window):
         cursor = self.textBrowser.textCursor()
         if text == "\r":
             self.rFLAG = True
-            pass
+
         elif "\b" in text:
             pass
 
         else:
-
             if self.rFLAG:
                 cursor.movePosition(QtGui.QTextCursor.StartOfLine)
                 cursor.select(QtGui.QTextCursor.LineUnderCursor)
                 cursor.removeSelectedText()
-                # cursor.insertText("\n")
                 self.rFLAG = False
             else:
                 cursor.movePosition(QtGui.QTextCursor.End)
@@ -174,12 +169,10 @@ class EmittingStream(QtCore.QObject):
 
     def flush(self):
         pass
-        # self.textWritten.emit(str("\r"))
 
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     window = MyApp()
-    # window = Example()
     window.show()
     sys.exit(app.exec_())

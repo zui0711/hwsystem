@@ -57,7 +57,7 @@ def seq2seq_train():
         step_time, total_time, loss = 0.0, 0.0, 0.0
         previous_losses = []
 
-        print("start train...")
+        print("start training...")
         # while (True):
         while(model.global_step.eval() <= seq2seq_epoch):
             # Choose a bucket according to data distribution. We pick a random number
@@ -113,6 +113,7 @@ def seq2seq_train():
                 if model.global_step.eval() % FLAGS.steps_per_predictpoint == 0:
                     checkpoint_path = os.path.join(FLAGS.model_dir, "model.ckpt")
                     model.saver.save(sess, checkpoint_path, global_step=model.global_step)
+                    print("saving model...\n")
                 step_time, loss = 0.0, 0.0
 
 
@@ -184,7 +185,8 @@ def seq2seq_predict():
 
                         results_f.write(output_sentence + '\n')
                         results_f_ids.write(output_sentence_ids + "\n")
-                    print("batch %d finish..."%num)
+                    sys.stdout.write("\r")
+                    sys.stdout.write("batch %d / %d finish..."%(num + 1, batch_num - 1))
                 t = time.time() - start_time
                 print("predict: total time = %0.2f, per time = %0.2f" % (t, t / float(batch_num - 1)))
 
@@ -200,9 +202,9 @@ def seq2seq_predict():
 
 def lstm_train():
     K.clear_session()
-    print(SAVE_DATA_DIR)
+    # print(SAVE_DATA_DIR)
 
-    print('Pad sequences (samples x time)')
+    # print('Pad sequences (samples x time)')
     X_train, y_train = load_data_lstm("train")
 
     X_train = sequence.pad_sequences(X_train, maxlen=LSTM_max_len)
@@ -218,7 +220,7 @@ def lstm_train():
     print("\n")
 
     model.fit(X_train, y_train, nb_epoch=lstm_epoch, verbose=1, batch_size=LSTM_batch_size)
-    print "train finish..."
+    # print "train finish..."
     model.save_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(lstm_epoch)))
     # cPickle.dump(model, open("lstm_model_%d.h5"%(lstm_epoch)))
 
