@@ -6,7 +6,7 @@ from interact import BackWorkThread
 
 from os.path import join as pjoin
 import os
-import config.path as PATH
+from config.all_params import PATH
 
 qtCreatorFile_main = "uis/main.ui"
 qtCreatorFile_train = "uis/train_layout.ui"
@@ -45,15 +45,15 @@ class train(QtGui.QMainWindow, Ui_trainWindow):
         QtGui.QMainWindow.__init__(self)
         Ui_trainWindow.__init__(self)
         self.setupUi(self)
-        self.loadButton.clicked.connect(self._load_data)
+        # self.loadButton.clicked.connect(self._load_data)
         self.paramButton.clicked.connect(self._set_param)
         self.preproButton.clicked.connect(self._prepro)
         self.detectButton.clicked.connect(self._detect)
         self.predictButton.clicked.connect(self._predict)
 
-    def _load_data(self):
-        print("GET RAW DATA PATH: " + self.lineEdit.text().toUtf8())
-        PATH.set_path(str(self.lineEdit.text().toUtf8()))
+    # def _load_data(self):
+        # print("GET RAW DATA PATH: " + self.lineEdit.text().toUtf8())
+        # PATH.set_path(str(self.lineEdit.text().toUtf8()))
 
     def _set_param(self):
         print("SET PARAMETERS")
@@ -82,7 +82,7 @@ class SetParamUi(QtGui.QDialog, Ui_paramWindow):
         Ui_paramWindow.__init__(self)
         self.setupUi(self)
         self.saveButton.clicked.connect(self._save_param)
-        self.param_path = pjoin(PATH.get_path(), "setting_params.py")
+        self.param_path = pjoin(PATH, "setting_params.py")
 
         self.plainTextEdit.setPlainText(open("config/setting_params.py").read())
 
@@ -102,14 +102,14 @@ class run(QtGui.QMainWindow, Ui_runWindow):
         QtGui.QMainWindow.__init__(self)
         Ui_runWindow.__init__(self)
         self.setupUi(self)
-        self.lineEdit.setText(PATH.get_path())
-        self.loadButton.clicked.connect(self._load_data)
+        # self.lineEdit.setText(PATH.get_path())
+        # self.loadButton.clicked.connect(self._load_data)
         self.detectButton.clicked.connect(self._detect)
         self.predictButton.clicked.connect(self._predict)
 
-    def _load_data(self):
-        print("GET RAW DATA PATH " + self.lineEdit.text().toUtf8())
-        PATH.set_path(str(self.lineEdit.text().toUtf8()))
+    # def _load_data(self):
+    #     print("GET RAW DATA PATH " + self.lineEdit.text().toUtf8())
+    #     PATH.set_path(str(self.lineEdit.text().toUtf8()))
 
     def _detect(self):
         print("START FAILURE DETECTION")

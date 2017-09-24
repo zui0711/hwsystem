@@ -121,6 +121,7 @@ def my_w2v_to_txt(model_path,output):
 def my_cut_split_data( file_name, file_label, cut_num=500):
 
     src_file =  os.path.join(CLEAN_PATH,file_name+'-clean.txt')
+    print(CLEAN_PATH)
     if not os.path.exists(src_file):
         print('%s not found!'%file_name)
         return -1
@@ -136,31 +137,32 @@ def my_cut_split_data( file_name, file_label, cut_num=500):
         if not os.path.exists(f):
             os.makedirs(f)
     contxt = open(src_file, "r")
-    for line in contxt:
-        if if_begin:
-            if random.random() > 0.7:
-                dst_file = os.path.join(dst_folder[1], str(file_count)+'.txt')
-            else:
-                dst_file = os.path.join(dst_folder[0], str(file_count)+'.txt')
-            wwf = open(dst_file, "w") 
-            if_begin = False
-        arr = line.split()
-        can_write = True
+    for i, line in enumerate(contxt):
+        if i % 3 == 0:
+            if if_begin:
+                if random.random() > 0.7:
+                    dst_file = os.path.join(dst_folder[1], str(file_count)+'.txt')
+                else:
+                    dst_file = os.path.join(dst_folder[0], str(file_count)+'.txt')
+                wwf = open(dst_file, "w")
+                if_begin = False
+            arr = line.split()
+            can_write = True
 
-        # judge if some error occurs in this line
-        for err_type in ERRORNAME:
-            if err_type in arr:
-                can_write = False
-                break
-        if can_write:
-            line_count += 1
-            wwf.write(line)
-        # end of a file
-        if line_count == cut_num:
-            line_count = 0
-            file_count += 1
-            if_begin = True
-            wwf.close()
+            # judge if some error occurs in this line
+            for err_type in ERRORNAME:
+                if err_type in arr:
+                    can_write = False
+                    break
+            if can_write:
+                line_count += 1
+                wwf.write(line)
+            # end of a file
+            if line_count == cut_num:
+                line_count = 0
+                file_count += 1
+                if_begin = True
+                wwf.close()
     
     contxt.close()
     if line_count != cut_num:
@@ -174,8 +176,9 @@ def detect_prepro():
     path_init()
     
     #remove symbos
-    # for i in range(len(File_name0)):
-    #     my_de_symbols(File_name0[i],File_label[i])
+    if IF_CLEAN:
+        for i in range(len(File_name0)):
+            my_de_symbols(File_name0[i],File_label[i])
 
     #train word2vectors
     if  IF_TRAIN_W2V :

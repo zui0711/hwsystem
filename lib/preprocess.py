@@ -1,6 +1,6 @@
-from data_utils import *
-from failure_predict import *
-from fault_detect import *
+from lib.data_utils import *
+from lib.failure_predict import *
+from lib.fault_detect import *
 from lib.fault_detect_preprocess import *
 import sys
 sys.path.append("../")

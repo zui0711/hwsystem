@@ -1,3 +1,8 @@
+#######################################################
+# PATH
+#######################################################
+PATH = "/media/workserv/498ee660-1fc8-40e8-bb02-f0a626cbfe93/jwl/PycharmProjects/FailureAnalysis/data/network_diagnosis_data"
+
 # preprocess
 
 encode_decode_window = 50
@@ -19,7 +24,7 @@ MY_CNN_MODEL_NAME = 'CNN_detect' #use this file name when saving cnn model
 MY_CNN_THRE = 'CNN_threshold' #use this file name when saving cnn threshold
 #file quantity
 DISCARD_BEGIN = 100
-CUT_LINES = 200
+CUT_LINES = 30
 SEED = 1
 MAX_PER_CLASS = 100 # defines how many files are read
 MAXIMUN_FIELS_PER_CLASS_TR = 1000 # train
@@ -42,13 +47,13 @@ VALIDATION_SPLIT = 0.2
 
 #
 
-IF_CUT = True
+IF_CUT = False
 IF_TRAIN_W2V = False
-
+IF_CLEAN = False
 
 # failure predict
 
-LSTM_embedding_size = 200
+LSTM_embedding_size = 64
 LSTM_batch_size = 128
 
 

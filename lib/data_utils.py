@@ -477,7 +477,7 @@ def set_train_test(path, encode_decode_window, encode_decode_gap, encode_decode_
 
 def load_data_lstm(mode):
     name = "decode.ids%d.txt"%seq2seq_vocab_size
-    print name
+    print (name)
 
     if mode == "train":
         X_train = []
@@ -521,7 +521,7 @@ def load_data_lstm(mode):
 
         name = "results(%d, %d).ids%d.%d" % (LSTM_max_len, LSTM_max_len, seq2seq_vocab_size, seq2seq_epoch)
 
-        print pjoin(SAVE_DATA_DIR, "results", name)
+        print( pjoin(SAVE_DATA_DIR, "results", name) )
         with open(pjoin(SAVE_DATA_DIR, "results", name), "rb") as f, \
                 open(pjoin(SAVE_DATA_DIR, "test", "labels.txt"), "rb") as fl:
             con = f.readlines()

@@ -1,5 +1,5 @@
-from setting_params import *
-import path as PATH
+from config.setting_params import *
+# import path as PATH
 from os.path import join as pjoin
 import os
 import tensorflow as tf
@@ -7,14 +7,15 @@ import tensorflow as tf
 # preprocess
 
 seq2seq_vocab_size = vocab_size + 3
-prepare_data_source_path = PATH.get_path()
+prepare_data_source_path = PATH
+# prepare_data_source_path = PATH.get_path()
 
 # prepare_data_source_file = "BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1"
 # prepare_data_label = "Paging"
 
-RAW_PAGING_DATA = pjoin(PATH.get_path(), "detect-new/clean/BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1-clean.txt")
+RAW_PAGING_DATA = pjoin(PATH, "detect-new/clean/BaseLine-BigData_1kUE_20ENB_paging-Case_Group_1-Case_1-clean.txt")
 
-prepare_data_save_path = pjoin(PATH.get_path(), "PREDICT")
+prepare_data_save_path = pjoin(PATH, "PREDICT")
 
 
 # SAVE_DATA_DIR = pjoin("/media/workerv/Seagate Backup Plus Drive/ALL_DATA/FailurePredict", "_".join([str(encode_decode_window), str(encode_decode_gap), str(encode_decode_step)]))
@@ -44,7 +45,7 @@ File_name0 = [
 
 
 #path
-MY_ROOT_PATH = PATH.get_path()
+MY_ROOT_PATH = PATH
 MY_DETECT_ROOT_PATH = os.path.join(MY_ROOT_PATH, 'detect-new')
 MY_DATA_PATH = os.path.join(MY_DETECT_ROOT_PATH, 'data')
 MY_TRAIN_DATA_PATH = os.path.join(MY_DATA_PATH,'train')

@@ -6,51 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>490</width>
-    <height>384</height>
+    <width>405</width>
+    <height>301</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>训练</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLineEdit" name="lineEdit">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>20</y>
-      <width>341</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-      <italic>true</italic>
-     </font>
-    </property>
-    <property name="text">
-     <string>填写路径</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="loadButton">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>60</y>
-      <width>98</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>加载数据</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>160</y>
+      <x>80</x>
+      <y>40</y>
       <width>238</width>
       <height>191</height>
      </rect>

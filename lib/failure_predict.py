@@ -15,12 +15,12 @@ from tensorflow.python.platform import gfile
 from models.seq2seq import create_model
 from models.LSTM import create_model_lstm
 from config.all_params import *
-from data_utils import *
+from lib.data_utils import *
 
 from keras.preprocessing import sequence
 import keras.backend as K
 
-import cPickle
+# import cPickle
 
 def seq2seq_train():
     if not gfile.Exists(pjoin(SAVE_DATA_DIR, "nn_models")):
@@ -44,14 +44,14 @@ def seq2seq_train():
         print ("Reading development and training data (limit: %d)." % FLAGS.max_train_data_size)
         dev_set = read_data(dev_data)
         train_set = read_data(train_data, FLAGS.max_train_data_size)
-        train_bucket_sizes = [len(train_set[b]) for b in xrange(len(BUCKETS))]
+        train_bucket_sizes = [len(train_set[b]) for b in range(len(BUCKETS))]
         train_total_size = float(sum(train_bucket_sizes))
 
         # A bucket scale is a list of increasing numbers from 0 to 1 that we'll use
         # to select a bucket. Length of [scale[i], scale[i+1]] is proportional to
         # the size if i-th training bucket, as used later.
         train_buckets_scale = [sum(train_bucket_sizes[:i + 1]) / train_total_size
-                               for i in xrange(len(train_bucket_sizes))]
+                               for i in range(len(train_bucket_sizes))]
 
         # This is the training loop.
         step_time, total_time, loss = 0.0, 0.0, 0.0
@@ -63,7 +63,7 @@ def seq2seq_train():
             # Choose a bucket according to data distribution. We pick a random number
             # in [0, 1] and use the corresponding interval in train_buckets_scale.
             random_number_01 = np.random.random_sample()
-            bucket_id = min([i for i in xrange(len(train_buckets_scale))
+            bucket_id = min([i for i in range(len(train_buckets_scale))
                            if train_buckets_scale[i] > random_number_01])
 
             # Get a batch and make a step.
@@ -94,7 +94,7 @@ def seq2seq_train():
                 previous_losses.append(loss)
 
                 # Run evals on development set and print their perplexity.
-                for bucket_id in xrange(len(BUCKETS)):
+                for bucket_id in range(len(BUCKETS)):
                     print("\nTesting...")
 
                     encoder_inputs, decoder_inputs, target_weights = model.get_batch(dev_set, bucket_id, "train")
@@ -162,14 +162,14 @@ def seq2seq_predict():
 
             with open(results_path, 'w') as results_f, open(results_path_ids, 'w') as results_f_ids:
                 start_time = time.time()
-                for num in xrange(batch_num - 1):
+                for num in range(1):
                     this_batch = test_dataset[batch_size*num: batch_size*(num+1)]
                     encoder_inputs, decoder_inputs, target_weights = model.get_batch(this_batch, bucket_id, "predict")
                     _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, True)
 
-                    for b in xrange(batch_size):
+                    for b in range(batch_size):
                         outputs = []
-                        for en in xrange(max_len):
+                        for en in range(max_len):
                             selected_token_id = int(np.argmax(output_logits[en][b]))
 
                             if selected_token_id == EOS_ID:
@@ -236,13 +236,27 @@ def lstm_predict(analysis_mode=False):
     model.load_weights(pjoin(SAVE_DATA_DIR, "lstm_model_%d.h5"%(lstm_epoch)))
 
     if not analysis_mode:
-        score, acc = model.evaluate(X_test, y_test,
-                                    batch_size=LSTM_batch_size)
+        score, acc = model.evaluate(X_test[:predict_batch_size], y_test[:predict_batch_size])
+
         print('Test loss: %0.5f' % score)
         print('Test accuracy: %0.5f\n' % acc)
 
+        y_pred = model.predict(X_test[:predict_batch_size])
+
+        hwstandard(y_pred, y_test)
+
+        eee = 0
+        nnn = 0
+        for yy in y_pred:
+            if yy[0] > 0.5:
+                eee += 1
+                print("ERROR")
+            else:
+                nnn += 1
+                print("NORMAL")
         # record_file.write("%.5f\t%.5f\n" % (score, acc))
 
+        # print(nnn / float(eee+nnn))
     else:
         predict_y = model.predict(X_test)
 
@@ -256,5 +270,39 @@ def lstm_predict(analysis_mode=False):
                 ans[p_t] += 1
             else:
                 ans[p_t] = 1
-        print ans
+        print (ans)
 
+
+
+def hwstandard(y_pred, y_test):
+    TP = 0.  # true positive A
+    FN = 0.  # false negative C
+    FP = 0.  # false positive B
+    TN = 0.  # true negative D
+    #     detect_acc = TN*1./(FN+FP+TN)
+    #     detect_false = FN*1./(FN+FP+TN)
+    #     detect_loss = FP*1./(FP+TN)
+    for i, yy in enumerate(y_pred):
+        if y_test[i] == 0:  # positive samples
+            if y_pred[i] < 0.5:
+                TP += 1
+            else:
+                FN += 1
+        else:  # error samples
+            if y_pred[i] >= 0.5:
+                TN += 1
+            else:
+                FP += 1
+
+    acc = (TP + TN) * 1. / (TP + FN + FP + TN)
+    P = TP / (TP + FP)
+    R = TP / (TP + FN)
+    F1 = 2 * TP / (2 * TP + FP + FN)
+    detect_acc = TN * 1. / (FN + FP + TN)
+    detect_false = FN * 1. / (FN + FP + TN)
+    detect_loss = FP * 1. / (FP + TN)
+    print('Accuracy:%.5f; Precision:%.5f; Recall:%.5f;F1 score:%.5f' % (acc, P, R, F1))
+    print('New evaluation metrics:')
+    print('Successfully detected fault:%.5f' % detect_acc)
+    print('Wrongly dectected falut:%.5f' % detect_false)
+    print('Omitted fault:%.5f' % detect_loss)

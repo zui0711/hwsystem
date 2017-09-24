@@ -2,7 +2,7 @@
 from PyQt4 import QtCore
 import time
 
-import config.path as PATH
+# import config.path as PATH
 from lib.preprocess import *
 
 class BackWorkThread(QtCore.QThread):

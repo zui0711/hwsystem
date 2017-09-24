@@ -72,8 +72,13 @@ def cnn_w2v_adptive_train():
     print('Load  %s samples.' % len(texts))
     print(labels_index)
     print(set(labels))
-    
-    tokenizer = Tokenizer(nb_words=MAX_NB_WORDS) # tokenize num_words
+
+    labels_index_path = os.path.join(MY_DETECT_ROOT_PATH, 'labels_index')
+    with open(labels_index_path, 'wb') as ft:
+        pickle.dump(labels_index, ft, protocol=1)
+
+    filterstr = r'!"#$%&()*+,-./:;<=>?@[\\]^`{|}~\t\n'
+    tokenizer = Tokenizer(filters=filterstr, nb_words=MAX_NB_WORDS) # tokenize num_words
     tokenizer.fit_on_texts(texts)
     sequences = tokenizer.texts_to_sequences(texts)
     
@@ -134,7 +139,7 @@ def cnn_w2v_adptive_train():
     # callbacks_list = [checkpoint] # checkpoint
     # print(VALIDATION_SPLIT,epoch_num,batch_size)
     model.fit(x_train, y_train,  validation_split=VALIDATION_SPLIT,
-              nb_epoch=epoch_num, batch_size=batch_size, verbose=1)#shuffle=True  callbacks=None
+              nb_epoch=epoch_num, batch_size=batch_size, verbose=1, shuffle=True)#  callbacks=None
     print('Saving model　at %s.'%filepath)
     json_string = model.to_json()  #equals json_string = model.get_config()
     with open(t_path +'.json','w+') as ft:
@@ -278,7 +283,33 @@ def cnn_w2v_adaptive_test():
     print('Load  %s samples.' % len(texts))
     print(labels_index)
     # print(set(labels))
-    
+
+    labels_index_path =  os.path.join(MY_DETECT_ROOT_PATH,'labels_index')
+    with open(labels_index_path,'rb') as ft:
+        old_labels_index = pickle.load(ft)
+    if 'NORMAL' in labels_index:
+        normal_idx = labels_index['NORMAL']
+    else:
+        normal_idx = 1
+        print("Please revise the KEY here!")
+    if not old_labels_index == labels_index:
+         print('Something wrong has occured.')
+         labels_index_path = os.path.join(MY_DETECT_ROOT_PATH, 'labels_index')
+         with open(labels_index_path, 'rb') as ft:
+             old_labels_index = pickle.load(ft)
+         if 'NORMAL' in labels_index:
+             normal_idx = labels_index['NORMAL']
+         else:
+             normal_idx = 1
+             print("Please revise the KEY here!")
+         if not old_labels_index == labels_index:
+             print('Something wrong has occured.')
+             os.system('pause')
+
+
+
+
+
 #     tokenizer = Tokenizer(num_words=MAX_NB_WORDS) # tokenize
     tokenizer_path =  os.path.join(MY_DETECT_ROOT_PATH,'tokenizer') 
     with open(tokenizer_path,'rb') as ft:
@@ -325,6 +356,10 @@ def cnn_w2v_adaptive_test():
     cnt1 = 0 # less then threshold
     cnt2 = 0
     cnt3 = 0
+    TP = 0
+    FP = 0
+    FN = 0
+    TN = 0
     # scores = model.evaluate(x_test, y_test, batch_size=batch_size, verbose=0)  # ,  batch_size=batch_size
     for i in range(p.shape[0]):
         if pred[i] == ground_truth[i]:
@@ -334,7 +369,27 @@ def cnn_w2v_adaptive_test():
             cnt1 += 1
         elif  pred[i] == ground_truth[i]:
             cnt2 +=1
-            
+
+    for i in range(p.shape[0]):
+        if ground_truth[i] == normal_idx:  # positive samples
+            if pred[i] == ground_truth[i]:
+                TP += 1
+            else:
+                FN += 1
+        if ground_truth[i] != normal_idx:  # error samples
+            if pred[i] != normal_idx:
+                TN += 1
+            else:
+                FP += 1
+                    #             if pred[i] == ground_truth[i]:
+                    #                 TN += 1
+                    #             else:
+                #                 FP += 1
+    P = TP *1./ (TP + FP)
+    R = TP *1./ (TP + FN)
+    F1 = 2. * TP / (2 * TP + FP + FN)
+    print('Accuracy:%s; Recall:%s;F1 score:%s' % (P, R, F1))
+
     acc = cnt2*100./x_test.shape[0]
     below_thre = cnt1*100./x_test.shape[0]
 
